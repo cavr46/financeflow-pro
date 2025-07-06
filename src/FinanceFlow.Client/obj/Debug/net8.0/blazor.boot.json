@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "FinanceFlow.Client",
   "resources": {
-    "hash": "sha256-2+FWuRhRO62K6sTXPfAg9eLukiSah7hzrGGhIKX1rwg=",
+    "hash": "sha256-j1sO4+Im8inIaCaazRtC7cp+brsfW1IXMlTiZUROoik=",
     "jsModuleNative": {
       "dotnet.native.8.0.16.ncvto4lt1f.js": "sha256-RiGT44TFZmHOY+Oqvb8o8r+BJVWex6+dPxFxrOiWvFY="
     },
@@ -215,10 +215,10 @@
       "mscorlib.wasm": "sha256-Im6xq+lOse4P/VnAyrA3hwPstV67V5dB0EwQWcjipyE=",
       "netstandard.wasm": "sha256-PK0GLtj6kQVtZPzq0FZlnSdHh7geujg80LqKdJXA4pI=",
       "System.Private.CoreLib.wasm": "sha256-gEwccs7GbRSPGmeWBOKxNroYfyM+mZ7hqbP3ki1iwX0=",
-      "FinanceFlow.Client.wasm": "sha256-gh1YA/Ux3JHKR/Kj9T3dBo7l0uuoXoWEmD9yUfPjlGM="
+      "FinanceFlow.Client.wasm": "sha256-rg6SxeV5NDA39T8Q0y9IfytMx7LRjdGdZS0YHsm30Ig="
     },
     "pdb": {
-      "FinanceFlow.Client.pdb": "sha256-RB1iZc7YvBDeKkppX9rXzQ2LLdoBMPuhGN9jV0WOevI="
+      "FinanceFlow.Client.pdb": "sha256-hCoyPsuM6IY20T3YdtQjZ/2XxrbyeZg0g3EDhw/kyso="
     }
   },
   "cacheBootResources": true,

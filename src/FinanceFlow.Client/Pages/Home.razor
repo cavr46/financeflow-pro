@@ -1,226 +1,313 @@
-﻿@page "/"
+@page "/"
 @using Microsoft.AspNetCore.Authorization
 @using FinanceFlow.Client.Models
 @using FinanceFlow.Client.Services
 @attribute [Authorize]
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <PageTitle>FinanceFlow Pro - Dashboard</PageTitle>
 
-<div class="dashboard-header">
-    <h1 class="display-4 text-white mb-4">Welcome to FinanceFlow Pro</h1>
-    <p class="lead text-white-50">Your comprehensive financial management solution</p>
-</div>
-
-@if (overview != null)
-{
-    <!-- Quick Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stat-card bg-gradient-success">
-                <div class="stat-card-body">
-                    <div class="stat-icon">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>@overview.TotalBalance.ToString("C")</h3>
-                        <p>Total Balance</p>
-                    </div>
-                </div>
+<div class="dashboard-container">
+    <!-- Animated Header -->
+    <div class="dashboard-header animate__animated animate__fadeInDown">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="display-4 fw-bold text-white mb-0">Welcome back!</h1>
+                <p class="lead text-white-50 mb-0">Here's your financial overview for @DateTime.Now.ToString("MMMM yyyy")</p>
             </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stat-card bg-gradient-primary">
-                <div class="stat-card-body">
-                    <div class="stat-icon">
-                        <i class="fas fa-arrow-up"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>@overview.MonthlyIncome.ToString("C")</h3>
-                        <p>Monthly Income</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stat-card bg-gradient-danger">
-                <div class="stat-card-body">
-                    <div class="stat-icon">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>@overview.MonthlyExpenses.ToString("C")</h3>
-                        <p>Monthly Expenses</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="stat-card bg-gradient-info">
-                <div class="stat-card-body">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>@overview.NetIncome.ToString("C")</h3>
-                        <p>Net Income</p>
-                    </div>
-                </div>
+            <div class="col-auto">
+                <button class="btn btn-light btn-lg shadow-sm" @onclick="RefreshData">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Action Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-4">
-            <div class="action-card h-100">
-                <div class="action-card-body text-center">
-                    <div class="action-icon text-success mb-3">
-                        <i class="fas fa-plus-circle fa-3x"></i>
+    @if (overview != null && !isLoading)
+    {
+        <!-- Enhanced Stats Cards with Animations -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-card-body">
+                        <div class="stat-icon pulse">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Total Balance</p>
+                            <h2 class="stat-value">@overview.TotalBalance.ToString("C")</h2>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> 12.5% from last month
+                            </div>
+                        </div>
                     </div>
-                    <h5 class="card-title">Add Transaction</h5>
-                    <p class="card-text">Record income, expenses, or transfers quickly and easily.</p>
-                    <button class="btn btn-success" @onclick="@(() => NavigateToTransactions())">Add Transaction</button>
+                    <div class="stat-card-footer">
+                        <canvas id="balanceTrendChart" height="50"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                <div class="stat-card stat-card-success">
+                    <div class="stat-card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Monthly Income</p>
+                            <h2 class="stat-value">@overview.MonthlyIncome.ToString("C")</h2>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> 8.3% increase
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                <div class="stat-card stat-card-danger">
+                    <div class="stat-card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Monthly Expenses</p>
+                            <h2 class="stat-value">@overview.MonthlyExpenses.ToString("C")</h2>
+                            <div class="stat-change negative">
+                                <i class="fas fa-arrow-up"></i> 3.2% increase
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
+                <div class="stat-card stat-card-info">
+                    <div class="stat-card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Net Savings</p>
+                            <h2 class="stat-value">@overview.NetIncome.ToString("C")</h2>
+                            <div class="progress mt-2" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: @((overview.NetIncome / overview.MonthlyIncome * 100).ToString("F0"))%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="action-card h-100">
-                <div class="action-card-body text-center">
-                    <div class="action-icon text-primary mb-3">
-                        <i class="fas fa-piggy-bank fa-3x"></i>
-                    </div>
-                    <h5 class="card-title">Create Budget</h5>
-                    <p class="card-text">Set spending limits and track your budget performance.</p>
-                    <button class="btn btn-primary" @onclick="@(() => NavigateToBudgets())">Create Budget</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="action-card h-100">
-                <div class="action-card-body text-center">
-                    <div class="action-icon text-info mb-3">
-                        <i class="fas fa-bullseye fa-3x"></i>
-                    </div>
-                    <h5 class="card-title">Set Goals</h5>
-                    <p class="card-text">Define financial goals and track your progress towards them.</p>
-                    <button class="btn btn-info" @onclick="@(() => NavigateToGoals())">Set Goal</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Recent Transactions and Account Balances -->
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Transactions</h5>
-                    <a href="/transactions" class="btn btn-sm btn-outline-primary">View All</a>
+        <!-- Charts Section -->
+        <div class="row mb-4">
+            <!-- Spending by Category Chart -->
+            <div class="col-lg-6 mb-4 animate__animated animate__fadeInLeft">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Spending by Category</h5>
+                        <span class="badge bg-light text-dark">This Month</span>
+                    </div>
+                    <div class="chart-card-body">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
                 </div>
-                <div class="card-body">
-                    @if (overview.RecentTransactions.Any())
-                    {
-                        <div class="transaction-list">
-                            @foreach (var transaction in overview.RecentTransactions.Take(5))
+            </div>
+
+            <!-- Income vs Expenses Trend -->
+            <div class="col-lg-6 mb-4 animate__animated animate__fadeInRight">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Income vs Expenses Trend</h5>
+                        <span class="badge bg-light text-dark">Last 6 Months</span>
+                    </div>
+                    <div class="chart-card-body">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Action Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp">
+                <div class="action-card gradient-primary">
+                    <div class="action-card-content">
+                        <div class="action-icon-wrapper">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h5>Quick Transaction</h5>
+                        <p>Record income or expenses instantly</p>
+                        <button class="btn btn-white shadow-sm" @onclick="@(() => NavigateToTransactions())">
+                            Add Transaction <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                <div class="action-card gradient-success">
+                    <div class="action-card-content">
+                        <div class="action-icon-wrapper">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <h5>Budget Planning</h5>
+                        <p>Set and track your spending limits</p>
+                        <button class="btn btn-white shadow-sm" @onclick="@(() => NavigateToBudgets())">
+                            Manage Budgets <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                <div class="action-card gradient-info">
+                    <div class="action-card-content">
+                        <div class="action-icon-wrapper">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h5>Financial Goals</h5>
+                        <p>Track progress towards your dreams</p>
+                        <button class="btn btn-white shadow-sm" @onclick="@(() => NavigateToGoals())">
+                            View Goals <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Accounts -->
+        <div class="row">
+            <!-- Recent Transactions with Enhanced Design -->
+            <div class="col-lg-8 mb-4 animate__animated animate__fadeInUp">
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Activity</h5>
+                        <a href="/transactions" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="activity-body">
+                        @if (overview.RecentTransactions.Any())
+                        {
+                            <div class="transaction-timeline">
+                                @foreach (var transaction in overview.RecentTransactions.Take(5))
+                                {
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker @GetTransactionMarkerClass(transaction.Type)"></div>
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">@transaction.Description</h6>
+                                                    <div class="transaction-meta">
+                                                        <span class="badge bg-light text-dark me-2">
+                                                            <i class="@GetCategoryIcon(transaction.CategoryName) me-1"></i>
+                                                            @(transaction.CategoryName ?? "Uncategorized")
+                                                        </span>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-calendar-alt me-1"></i>
+                                                            @transaction.Date.ToString("MMM dd, yyyy")
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h5 class="mb-0 @GetAmountClass(transaction.Type)">
+                                                        @GetAmountPrefix(transaction.Type)@transaction.Amount.ToString("C")
+                                                    </h5>
+                                                    <small class="text-muted">@transaction.AccountName</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No transactions yet. Start tracking your finances!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Balances with Visual Indicators -->
+            <div class="col-lg-4 mb-4 animate__animated animate__fadeInUp">
+                <div class="accounts-card">
+                    <div class="accounts-header">
+                        <h5 class="mb-0"><i class="fas fa-university me-2"></i>My Accounts</h5>
+                        <a href="/accounts" class="btn btn-sm btn-outline-primary">Manage</a>
+                    </div>
+                    <div class="accounts-body">
+                        @if (overview.AccountBalances.Any())
+                        {
+                            @foreach (var account in overview.AccountBalances)
                             {
-                                <div class="transaction-item">
-                                    <div class="transaction-icon">
-                                        @if (!string.IsNullOrEmpty(transaction.CategoryIcon))
-                                        {
-                                            <i class="@transaction.CategoryIcon" style="color: @transaction.CategoryColor"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-circle" style="color: @GetTypeColor(transaction.Type)"></i>
-                                        }
+                                <div class="account-item">
+                                    <div class="account-icon @GetAccountIconClass(account.Type)">
+                                        <i class="@GetAccountIcon(account.Type)"></i>
                                     </div>
-                                    <div class="transaction-details">
-                                        <div class="transaction-description">@transaction.Description</div>
-                                        <div class="transaction-meta">@transaction.AccountName • @transaction.Date.ToString("MMM dd")</div>
+                                    <div class="account-details">
+                                        <h6 class="mb-1">@account.Name</h6>
+                                        <small class="text-muted">@account.Type</small>
                                     </div>
-                                    <div class="transaction-amount @GetAmountClass(transaction.Type)">
-                                        @GetAmountPrefix(transaction.Type)@transaction.Amount.ToString("C")
+                                    <div class="account-balance">
+                                        <h5 class="mb-0 @(account.Balance >= 0 ? "text-success" : "text-danger")">
+                                            @account.Balance.ToString("C")
+                                        </h5>
                                     </div>
                                 </div>
                             }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4">
-                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No transactions yet. Start by adding your first transaction!</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Account Balances</h5>
-                    <a href="/accounts" class="btn btn-sm btn-outline-primary">Manage</a>
-                </div>
-                <div class="card-body">
-                    @if (overview.AccountBalances.Any())
-                    {
-                        @foreach (var account in overview.AccountBalances)
+                        }
+                        else
                         {
-                            <div class="account-item">
-                                <div class="account-info">
-                                    <div class="account-name">@account.Name</div>
-                                    <div class="account-type">@account.Type</div>
-                                </div>
-                                <div class="account-balance">
-                                    @account.Balance.ToString("C")
-                                </div>
+                            <div class="empty-state">
+                                <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Add your first account to get started!</p>
                             </div>
                         }
-                    }
-                    else
-                    {
-                        <div class="text-center py-4">
-                            <i class="fas fa-university fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No accounts yet. Add your first account to get started!</p>
-                        </div>
-                    }
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
-else if (isLoading)
-{
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    }
+    else if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner-grow text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading your financial data...</p>
         </div>
-        <p class="mt-3">Loading your dashboard...</p>
-    </div>
-}
-else
-{
-    <div class="alert alert-danger" role="alert">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        Failed to load dashboard data. Please try refreshing the page.
-    </div>
-}
+    }
+    else
+    {
+        <div class="alert alert-danger animate__animated animate__shakeX" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Failed to load dashboard data. Please try refreshing the page.
+        </div>
+    }
+</div>
 
 @code {
     private DashboardOverviewDto? overview;
     private bool isLoading = true;
+    private IJSObjectReference? chartModule;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDashboardData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && overview != null)
+        {
+            await Task.Delay(500); // Allow animations to start
+            await InitializeCharts();
+        }
     }
 
     private async Task LoadDashboardData()
@@ -240,6 +327,187 @@ else
         }
     }
 
+    private async Task RefreshData()
+    {
+        await LoadDashboardData();
+        StateHasChanged();
+        await InitializeCharts();
+    }
+
+    private async Task InitializeCharts()
+    {
+        // Spending by Category Pie Chart
+        var spendingData = new
+        {
+            labels = new[] { "Food & Dining", "Transportation", "Shopping", "Entertainment", "Utilities", "Others" },
+            datasets = new[]
+            {
+                new
+                {
+                    data = new[] { 450, 300, 250, 200, 150, 125 },
+                    backgroundColor = new[]
+                    {
+                        "#FF6384",
+                        "#36A2EB",
+                        "#FFCE56",
+                        "#4BC0C0",
+                        "#9966FF",
+                        "#FF9F40"
+                    },
+                    borderWidth = 0,
+                    hoverOffset = 10
+                }
+            }
+        };
+
+        var spendingConfig = new
+        {
+            type = "doughnut",
+            data = spendingData,
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new
+                {
+                    legend = new
+                    {
+                        position = "bottom",
+                        labels = new
+                        {
+                            padding = 20,
+                            usePointStyle = true,
+                            font = new { size = 12 }
+                        }
+                    },
+                    tooltip = new
+                    {
+                        callbacks = new { }
+                    }
+                },
+                animation = new
+                {
+                    animateScale = true,
+                    animateRotate = true
+                }
+            }
+        };
+
+        await JSRuntime.InvokeVoidAsync("ChartInterop.createChart", "spendingChart", spendingConfig);
+
+        // Income vs Expenses Line Chart
+        var trendData = new
+        {
+            labels = new[] { "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" },
+            datasets = new[]
+            {
+                new
+                {
+                    label = "Income",
+                    data = new[] { 3200, 3500, 3300, 3600, 3400, 3500 },
+                    borderColor = "#22c55e",
+                    backgroundColor = "rgba(34, 197, 94, 0.1)",
+                    tension = 0.4,
+                    fill = true
+                },
+                new
+                {
+                    label = "Expenses",
+                    data = new[] { 2800, 2900, 2700, 3000, 2850, 2900 },
+                    borderColor = "#ef4444",
+                    backgroundColor = "rgba(239, 68, 68, 0.1)",
+                    tension = 0.4,
+                    fill = true
+                }
+            }
+        };
+
+        var trendConfig = new
+        {
+            type = "line",
+            data = trendData,
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                interaction = new
+                {
+                    mode = "index",
+                    intersect = false
+                },
+                plugins = new
+                {
+                    legend = new
+                    {
+                        display = true,
+                        labels = new
+                        {
+                            usePointStyle = true,
+                            padding = 20
+                        }
+                    }
+                },
+                scales = new
+                {
+                    x = new
+                    {
+                        display = true,
+                        grid = new { display = false }
+                    },
+                    y = new
+                    {
+                        display = true,
+                        grid = new { color = "rgba(0, 0, 0, 0.05)" }
+                    }
+                }
+            }
+        };
+
+        await JSRuntime.InvokeVoidAsync("ChartInterop.createChart", "trendChart", trendConfig);
+
+        // Mini Balance Trend Chart
+        var balanceTrendData = new
+        {
+            labels = new[] { "", "", "", "", "", "" },
+            datasets = new[]
+            {
+                new
+                {
+                    data = new[] { 8500, 8700, 8600, 8900, 9100, 9200 },
+                    borderColor = "#3b82f6",
+                    borderWidth = 2,
+                    fill = false,
+                    tension = 0.4,
+                    pointRadius = 0,
+                    pointHoverRadius = 0
+                }
+            }
+        };
+
+        var balanceTrendConfig = new
+        {
+            type = "line",
+            data = balanceTrendData,
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new
+                {
+                    legend = new { display = false },
+                    tooltip = new { enabled = false }
+                },
+                scales = new
+                {
+                    x = new { display = false },
+                    y = new { display = false }
+                }
+            }
+        };
+
+        await JSRuntime.InvokeVoidAsync("ChartInterop.createChart", "balanceTrendChart", balanceTrendConfig);
+    }
+
     private void NavigateToTransactions()
     {
         JSRuntime.InvokeVoidAsync("alert", "Navigate to /transactions/add - Feature coming soon!");
@@ -255,14 +523,14 @@ else
         JSRuntime.InvokeVoidAsync("alert", "Navigate to /goals/create - Feature coming soon!");
     }
 
-    private string GetTypeColor(TransactionType type)
+    private string GetTransactionMarkerClass(TransactionType type)
     {
         return type switch
         {
-            TransactionType.Income => "#28a745",
-            TransactionType.Expense => "#dc3545",
-            TransactionType.Transfer => "#007bff",
-            _ => "#6c757d"
+            TransactionType.Income => "success",
+            TransactionType.Expense => "danger",
+            TransactionType.Transfer => "info",
+            _ => "secondary"
         };
     }
 
@@ -283,12 +551,60 @@ else
         {
             TransactionType.Income => "+",
             TransactionType.Expense => "-",
-            TransactionType.Transfer => "→",
+            TransactionType.Transfer => "",
             _ => ""
         };
     }
 
-    // DTO classes for the dashboard
+    private string GetCategoryIcon(string? categoryName)
+    {
+        return categoryName?.ToLower() switch
+        {
+            "food & dining" => "fas fa-utensils",
+            "transportation" => "fas fa-car",
+            "shopping" => "fas fa-shopping-bag",
+            "entertainment" => "fas fa-film",
+            "utilities" => "fas fa-bolt",
+            "salary" => "fas fa-dollar-sign",
+            _ => "fas fa-tag"
+        };
+    }
+
+    private string GetAccountIcon(AccountType type)
+    {
+        return type switch
+        {
+            AccountType.Checking => "fas fa-money-check",
+            AccountType.Savings => "fas fa-piggy-bank",
+            AccountType.Credit => "fas fa-credit-card",
+            AccountType.Investment => "fas fa-chart-line",
+            AccountType.Cash => "fas fa-wallet",
+            _ => "fas fa-university"
+        };
+    }
+
+    private string GetAccountIconClass(AccountType type)
+    {
+        return type switch
+        {
+            AccountType.Checking => "bg-primary",
+            AccountType.Savings => "bg-success",
+            AccountType.Credit => "bg-danger",
+            AccountType.Investment => "bg-info",
+            AccountType.Cash => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (chartModule != null)
+        {
+            await chartModule.DisposeAsync();
+        }
+    }
+
+    // DTO classes remain the same
     public class DashboardOverviewDto
     {
         public decimal TotalBalance { get; set; }
@@ -344,182 +660,337 @@ else
 }
 
 <style>
-    .dashboard-header {
-        text-align: center;
-        margin-bottom: 3rem;
+    /* Modern Dashboard Styles */
+    .dashboard-container {
         padding: 2rem 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 1rem;
-        margin-top: 1rem;
+        background-color: #f8f9fa;
+        min-height: 100vh;
     }
 
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 1.5rem;
+        margin: -2rem -12px 2rem -12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Enhanced Stat Cards */
     .stat-card {
-        border-radius: 1rem;
-        border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         overflow: hidden;
-        transition: transform 0.2s ease;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
     }
 
     .stat-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
     }
 
     .stat-card-body {
-        padding: 1.5rem;
+        padding: 2rem;
         display: flex;
         align-items: center;
-        color: white;
+        gap: 1.5rem;
     }
 
     .stat-icon {
-        font-size: 2.5rem;
-        margin-right: 1rem;
-        opacity: 0.8;
-    }
-
-    .stat-content h3 {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-    }
-
-    .stat-content p {
-        margin: 0;
-        opacity: 0.9;
-        font-size: 0.9rem;
-    }
-
-    .action-card {
-        border: none;
+        width: 70px;
+        height: 70px;
         border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .action-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    }
-
-    .action-card-body {
-        padding: 2rem;
-    }
-
-    .action-icon {
-        margin-bottom: 1rem;
-    }
-
-    .card {
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        border-radius: 1rem 1rem 0 0 !important;
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .transaction-list {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    .transaction-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #f1f3f4;
-    }
-
-    .transaction-item:last-child {
-        border-bottom: none;
-    }
-
-    .transaction-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #f8f9fa;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
+        font-size: 2rem;
+        color: white;
     }
 
-    .transaction-details {
+    .stat-icon.pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .stat-card-primary .stat-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .stat-card-success .stat-icon {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .stat-card-danger .stat-icon {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .stat-card-info .stat-icon {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: #111827;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .stat-change.positive {
+        color: #22c55e;
+    }
+
+    .stat-change.negative {
+        color: #ef4444;
+    }
+
+    .stat-card-footer {
+        padding: 0 2rem 1rem;
+        height: 60px;
+    }
+
+    /* Chart Cards */
+    .chart-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .chart-card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .chart-card-body {
+        padding: 2rem;
+        height: 350px;
+    }
+
+    /* Enhanced Action Cards */
+    .action-card {
+        border-radius: 1.5rem;
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .gradient-success {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .gradient-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+
+    .action-icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-card h5 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .action-card p {
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-white {
+        background: white;
+        color: #111827;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-white:hover {
+        background: #f9fafb;
+        transform: translateX(5px);
+    }
+
+    /* Activity Card */
+    .activity-card, .accounts-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .activity-header, .accounts-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .activity-body, .accounts-body {
+        padding: 1.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    /* Timeline Design */
+    .timeline-item {
+        position: relative;
+        padding-left: 3rem;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid #e5e7eb;
+    }
+
+    .timeline-item:last-child {
+        border-left: none;
+        padding-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e5e7eb;
+    }
+
+    .timeline-marker.success {
+        border-color: #22c55e;
+        background: #22c55e;
+    }
+
+    .timeline-marker.danger {
+        border-color: #ef4444;
+        background: #ef4444;
+    }
+
+    .timeline-marker.info {
+        border-color: #06b6d4;
+        background: #06b6d4;
+    }
+
+    .timeline-content {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 0.75rem;
+    }
+
+    /* Account Items */
+    .account-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        transition: background 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+
+    .account-item:hover {
+        background: #f9fafb;
+    }
+
+    .account-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+    }
+
+    .account-details {
         flex: 1;
     }
 
-    .transaction-description {
+    .account-details h6 {
+        margin: 0;
         font-weight: 600;
-        color: #495057;
     }
 
-    .transaction-meta {
-        font-size: 0.875rem;
-        color: #6c757d;
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
     }
 
-    .transaction-amount {
-        font-weight: 700;
-        font-size: 1rem;
-    }
-
-    .account-item {
+    /* Loading State */
+    .loading-container {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #f1f3f4;
+        justify-content: center;
+        min-height: 400px;
     }
 
-    .account-item:last-child {
-        border-bottom: none;
-    }
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .dashboard-header {
+            margin: -2rem -15px 2rem -15px;
+            border-radius: 0;
+        }
 
-    .account-name {
-        font-weight: 600;
-        color: #495057;
-    }
+        .stat-card-body {
+            flex-direction: column;
+            text-align: center;
+        }
 
-    .account-type {
-        font-size: 0.875rem;
-        color: #6c757d;
-    }
-
-    .account-balance {
-        font-weight: 700;
-        color: #28a745;
-    }
-
-    .bg-gradient-success {
-        background: linear-gradient(45deg, #28a745, #20c997);
-    }
-
-    .bg-gradient-primary {
-        background: linear-gradient(45deg, #007bff, #6610f2);
-    }
-
-    .bg-gradient-danger {
-        background: linear-gradient(45deg, #dc3545, #e83e8c);
-    }
-
-    .bg-gradient-info {
-        background: linear-gradient(45deg, #17a2b8, #6f42c1);
-    }
-
-    .btn {
-        border-radius: 0.5rem;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-1px);
+        .chart-card-body {
+            height: 250px;
+        }
     }
 </style>
