@@ -1,0 +1,7 @@
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.csproj.AssemblyReference.cache
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.AssemblyInfoInputs.cache
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.AssemblyInfo.cs
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.csproj.CoreCompileInputs.cache
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.MvcApplicationPartsAssemblyInfo.cache
+/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/FinanceFlow.Client.sourcelink.json

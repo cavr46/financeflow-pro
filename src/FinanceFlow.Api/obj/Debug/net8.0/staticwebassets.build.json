@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "ScPENa0BJUT5myt2Bfd+nsZ8RWJY0RyDGXgHtcVO0HI=",
+  "Source": "FinanceFlow.Api",
+  "BasePath": "_content/FinanceFlow.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

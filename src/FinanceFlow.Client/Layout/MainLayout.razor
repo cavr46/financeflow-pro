@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using FinanceFlow.Client.Services
+@inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            </div>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Welcome, @context.User.FindFirst("FirstName")?.Value!</span>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="HandleLogout">Logout</button>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div>
+                        <a href="/login" class="btn btn-primary btn-sm me-2">Login</a>
+                        <a href="/register" class="btn btn-outline-primary btn-sm">Register</a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}

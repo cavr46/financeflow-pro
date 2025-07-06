@@ -1,0 +1,111 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>FinanceFlow Pro - Dashboard</PageTitle>
+
+<div class="dashboard-header">
+    <h1 class="display-4 text-primary mb-4">Welcome to FinanceFlow Pro</h1>
+    <p class="lead">Your comprehensive financial management solution</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Track Expenses</h5>
+                <p class="card-text">Monitor your spending and categorize expenses for better financial insights.</p>
+                <button class="btn btn-success">Get Started</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-piggy-bank fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Budget Planning</h5>
+                <p class="card-text">Create and manage budgets to reach your financial goals effectively.</p>
+                <button class="btn btn-primary">Create Budget</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-pie fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Reports</h5>
+                <p class="card-text">Generate detailed reports to analyze your financial patterns and trends.</p>
+                <button class="btn btn-info">View Reports</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4 class="text-success">$2,500</h4>
+                        <p class="text-muted">Monthly Income</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-danger">$1,800</h4>
+                        <p class="text-muted">Monthly Expenses</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info">$700</h4>
+                        <p class="text-muted">Monthly Savings</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-warning">$12,000</h4>
+                        <p class="text-muted">Total Balance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        margin-top: 1rem;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+    }
+
+    .fa-3x {
+        font-size: 3rem !important;
+    }
+</style>
