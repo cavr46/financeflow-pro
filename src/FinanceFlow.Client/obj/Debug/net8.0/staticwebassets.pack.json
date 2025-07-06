@@ -1,0 +1,61 @@
+{
+  "Files": [
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/bin/Debug/net8.0/wwwroot/_framework/blazor.webassembly.js",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/compressed/ex8jdvz8bh.gz",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js.gz"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/obj/Debug/net8.0/scopedcss/bundle/FinanceFlow.Client.styles.css",
+      "PackagePath": "staticwebassets/FinanceFlow.Client.styles.css"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/css/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/css/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/icon-192.png",
+      "PackagePath": "staticwebassets/icon-192.png"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "/workspaces/financeflow-pro/src/FinanceFlow.Client/wwwroot/sample-data/weather.json",
+      "PackagePath": "staticwebassets/sample-data/weather.json"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.FinanceFlow.Client.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.FinanceFlow.Client.props",
+      "PackagePath": "build\\FinanceFlow.Client.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.FinanceFlow.Client.props",
+      "PackagePath": "buildMultiTargeting\\FinanceFlow.Client.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.FinanceFlow.Client.props",
+      "PackagePath": "buildTransitive\\FinanceFlow.Client.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

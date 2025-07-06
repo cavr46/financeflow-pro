@@ -26,8 +26,16 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Budgets.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQnVkZ2V0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Goals.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvR29hbHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Home.razor]
@@ -40,6 +48,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Register.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUmVnaXN0ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Transactions.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvVHJhbnNhY3Rpb25zLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/financeflow-pro/src/FinanceFlow.Client/Pages/Weather.razor]

@@ -1,0 +1,289 @@
+@page "/budgets"
+@using Microsoft.AspNetCore.Authorization
+@using FinanceFlow.Client.Models
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Budgets - FinanceFlow Pro</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Budgets</h1>
+            <p class="lead">Track your spending and stay within your limits</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary btn-lg" @onclick="@(() => ShowCreateBudgetModal())">
+                <i class="fas fa-plus me-2"></i>Create Budget
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading budgets...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Budget Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Budget</h5>
+                        <h3>$3,500.00</h3>
+                        <small>Monthly</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Spent</h5>
+                        <h3>$2,145.75</h3>
+                        <small>61% of budget</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Remaining</h5>
+                        <h3>$1,354.25</h3>
+                        <small>39% left</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Active Budgets</h5>
+                        <h3>5</h3>
+                        <small>This period</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Cards -->
+        <div class="row">
+            <!-- Monthly Budget -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>
+                            Monthly Budget
+                        </h5>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Food & Dining</span>
+                            <span>$385.50 / $500.00</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-warning" style="width: 77%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Transportation</span>
+                            <span>$245.00 / $300.00</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-info" style="width: 82%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Entertainment</span>
+                            <span>$125.75 / $200.00</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-success" style="width: 63%"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shopping</span>
+                            <span>$445.50 / $400.00</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                        </div>
+
+                        <div class="mt-3 pt-3 border-top">
+                            <div class="d-flex justify-content-between">
+                                <strong>Total: $1,201.75 / $1,400.00</strong>
+                                <span class="badge bg-success">On Track</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vacation Budget -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plane text-info me-2"></i>
+                            Vacation Fund
+                        </h5>
+                        <span class="badge bg-info">Savings</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-info">$2,450.00</h3>
+                            <p class="text-muted">of $5,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-info" style="width: 49%">49%</div>
+                        </div>
+
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>June 2025</strong></div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Monthly Target</small>
+                                <div><strong>$425.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-success">Add Funds</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Fund -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt text-success me-2"></i>
+                            Emergency Fund
+                        </h5>
+                        <span class="badge bg-success">Savings</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-success">$8,750.00</h3>
+                            <p class="text-muted">of $10,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-success" style="width: 88%">88%</div>
+                        </div>
+
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>March 2025</strong></div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Remaining</small>
+                                <div><strong>$1,250.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-success">Add Funds</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Holiday Shopping -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-gifts me-2"></i>
+                            Holiday Shopping
+                        </h5>
+                        <span class="badge bg-dark">Near Limit</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-warning">$785.50</h3>
+                            <p class="text-muted">of $800.00 budget</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-warning" style="width: 98%">98%</div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> You're almost at your limit!
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger">View Transactions</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate loading
+        isLoading = true;
+        await Task.Delay(1000);
+        isLoading = false;
+    }
+
+    private void ShowCreateBudgetModal()
+    {
+        JSRuntime.InvokeVoidAsync("alert", "Create Budget modal - Feature coming soon!");
+    }
+}
+
+<style>
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .progress {
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+</style>

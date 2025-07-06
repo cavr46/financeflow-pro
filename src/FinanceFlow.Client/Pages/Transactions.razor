@@ -1,0 +1,239 @@
+@page "/transactions"
+@using Microsoft.AspNetCore.Authorization
+@using FinanceFlow.Client.Models
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Transactions - FinanceFlow Pro</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Transactions</h1>
+            <p class="lead">Manage your income, expenses, and transfers</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary btn-lg" @onclick="@(() => ShowAddTransactionModal())">
+                <i class="fas fa-plus me-2"></i>Add Transaction
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading transactions...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Income</h5>
+                        <h3 class="text-success">$2,450.00</h3>
+                        <small class="text-muted">This Month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">Expenses</h5>
+                        <h3 class="text-danger">$1,875.50</h3>
+                        <small class="text-muted">This Month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">Net</h5>
+                        <h3 class="text-info">$574.50</h3>
+                        <small class="text-muted">This Month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <h3>45</h3>
+                        <small class="text-muted">Transactions</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select">
+                            <option selected>This Month</option>
+                            <option>Last Month</option>
+                            <option>Last 3 Months</option>
+                            <option>This Year</option>
+                            <option>Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select">
+                            <option selected>All Types</option>
+                            <option>Income</option>
+                            <option>Expense</option>
+                            <option>Transfer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select">
+                            <option selected>All Categories</option>
+                            <option>Food & Dining</option>
+                            <option>Transportation</option>
+                            <option>Shopping</option>
+                            <option>Entertainment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" class="form-control" placeholder="Search transactions...">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Transactions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sample transactions -->
+                            <tr>
+                                <td>Dec 15, 2024</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-utensils text-primary me-2"></i>
+                                        Lunch at Restaurant
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-warning">Food & Dining</span></td>
+                                <td>Credit Card</td>
+                                <td><span class="text-danger">-$45.50</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dec 14, 2024</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-dollar-sign text-success me-2"></i>
+                                        Salary Payment
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-success">Salary</span></td>
+                                <td>Checking Account</td>
+                                <td><span class="text-success">+$2,500.00</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dec 13, 2024</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-gas-pump text-info me-2"></i>
+                                        Gas Station
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">Transportation</span></td>
+                                <td>Debit Card</td>
+                                <td><span class="text-danger">-$65.00</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@code {
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate loading
+        isLoading = true;
+        await Task.Delay(1000);
+        isLoading = false;
+    }
+
+    private void ShowAddTransactionModal()
+    {
+        JSRuntime.InvokeVoidAsync("alert", "Add Transaction modal - Feature coming soon!");
+    }
+}
+
+<style>
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+</style>

@@ -1,0 +1,427 @@
+@page "/goals"
+@using Microsoft.AspNetCore.Authorization
+@using FinanceFlow.Client.Models
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Goals - FinanceFlow Pro</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Financial Goals</h1>
+            <p class="lead">Set and track your financial objectives</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary btn-lg" @onclick="@(() => ShowCreateGoalModal())">
+                <i class="fas fa-plus me-2"></i>Create Goal
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading goals...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Goals Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Goals</h5>
+                        <h3>6</h3>
+                        <small>Active & Completed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Saved</h5>
+                        <h3>$12,450.00</h3>
+                        <small>Total progress</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Target</h5>
+                        <h3>$25,000.00</h3>
+                        <small>Combined goals</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Progress</h5>
+                        <h3>50%</h3>
+                        <small>Overall completion</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Cards -->
+        <div class="row">
+            <!-- House Down Payment -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-home text-primary me-2"></i>
+                            House Down Payment
+                        </h5>
+                        <span class="badge bg-primary">Active</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-primary">$18,500.00</h3>
+                            <p class="text-muted">of $50,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 37%">
+                                37%
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>Dec 2025</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Monthly Need</small>
+                                <div><strong>$2,625.00</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Days Left</small>
+                                <div><strong>365</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Remaining</small>
+                                <div class="text-info"><strong>$31,500.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-success me-2">Add Contribution</button>
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">View History</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Fund -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt text-success me-2"></i>
+                            Emergency Fund
+                        </h5>
+                        <span class="badge bg-warning">Near Complete</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-success">$8,750.00</h3>
+                            <p class="text-muted">of $10,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success progress-bar-striped" style="width: 88%">
+                                88%
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>Mar 2025</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Monthly Need</small>
+                                <div><strong>$417.00</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Days Left</small>
+                                <div><strong>90</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Remaining</small>
+                                <div class="text-info"><strong>$1,250.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-success me-2">Add Contribution</button>
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">View History</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Car -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-car text-info me-2"></i>
+                            New Car
+                        </h5>
+                        <span class="badge bg-info">Active</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-info">$3,200.00</h3>
+                            <p class="text-muted">of $15,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-info" style="width: 21%">
+                                21%
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>Aug 2025</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Monthly Need</small>
+                                <div><strong>$1,475.00</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Days Left</small>
+                                <div><strong>240</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Remaining</small>
+                                <div class="text-info"><strong>$11,800.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-success me-2">Add Contribution</button>
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">View History</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vacation -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card border-success">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plane me-2"></i>
+                            Europe Vacation
+                        </h5>
+                        <span class="badge bg-light text-dark">Completed</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-success">$5,000.00</h3>
+                            <p class="text-muted">of $5,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" style="width: 100%">
+                                100% Complete!
+                            </div>
+                        </div>
+
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Congratulations!</strong> Goal completed on November 15, 2024.
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-outline-secondary me-2">View History</button>
+                        <button class="btn btn-sm btn-outline-primary">Create Similar Goal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Portfolio -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line text-warning me-2"></i>
+                            Investment Portfolio
+                        </h5>
+                        <span class="badge bg-warning text-dark">Behind Schedule</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-warning">$1,850.00</h3>
+                            <p class="text-muted">of $25,000.00 goal</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-warning" style="width: 7%">
+                                7%
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>Dec 2026</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Monthly Need</small>
+                                <div><strong>$962.50</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Behind Schedule:</strong> Consider increasing contributions.
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-success me-2">Add Contribution</button>
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">View History</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debt Payoff -->
+            <div class="col-lg-6 mb-4">
+                <div class="card goal-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card text-danger me-2"></i>
+                            Credit Card Payoff
+                        </h5>
+                        <span class="badge bg-danger">Debt Goal</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-danger">$2,150.00</h3>
+                            <p class="text-muted">paid of $8,500.00 debt</p>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-danger" style="width: 25%">
+                                25% Paid
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Target Date</small>
+                                <div><strong>Oct 2025</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Monthly Payment</small>
+                                <div><strong>$635.00</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Interest Rate</small>
+                                <div><strong>18.9%</strong></div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <small class="text-muted">Remaining</small>
+                                <div class="text-danger"><strong>$6,350.00</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-danger me-2">Make Payment</button>
+                        <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-outline-secondary">Payment History</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate loading
+        isLoading = true;
+        await Task.Delay(1000);
+        isLoading = false;
+    }
+
+    private void ShowCreateGoalModal()
+    {
+        JSRuntime.InvokeVoidAsync("alert", "Create Goal modal - Feature coming soon!");
+    }
+}
+
+<style>
+    .goal-card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .goal-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .progress {
+        border-radius: 15px;
+        background-color: #f8f9fa;
+    }
+
+    .progress-bar {
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+    }
+
+    .alert {
+        border: none;
+        border-radius: 0.75rem;
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+</style>

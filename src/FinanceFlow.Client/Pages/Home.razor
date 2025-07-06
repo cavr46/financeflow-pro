@@ -84,7 +84,7 @@
                     </div>
                     <h5 class="card-title">Add Transaction</h5>
                     <p class="card-text">Record income, expenses, or transfers quickly and easily.</p>
-                    <button class="btn btn-success" @onclick="() => NavigateTo('/transactions/add')">Add Transaction</button>
+                    <button class="btn btn-success" @onclick="@(() => NavigateToTransactions())">Add Transaction</button>
                 </div>
             </div>
         </div>
@@ -97,7 +97,7 @@
                     </div>
                     <h5 class="card-title">Create Budget</h5>
                     <p class="card-text">Set spending limits and track your budget performance.</p>
-                    <button class="btn btn-primary" @onclick="() => NavigateTo('/budgets/create')">Create Budget</button>
+                    <button class="btn btn-primary" @onclick="@(() => NavigateToBudgets())">Create Budget</button>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                     </div>
                     <h5 class="card-title">Set Goals</h5>
                     <p class="card-text">Define financial goals and track your progress towards them.</p>
-                    <button class="btn btn-info" @onclick="() => NavigateTo('/goals/create')">Set Goal</button>
+                    <button class="btn btn-info" @onclick="@(() => NavigateToGoals())">Set Goal</button>
                 </div>
             </div>
         </div>
@@ -240,10 +240,19 @@ else
         }
     }
 
-    private void NavigateTo(string url)
+    private void NavigateToTransactions()
     {
-        // For now, just show alert - later we'll implement proper navigation
-        JSRuntime.InvokeVoidAsync("alert", $"Navigate to {url} - Feature coming soon!");
+        JSRuntime.InvokeVoidAsync("alert", "Navigate to /transactions/add - Feature coming soon!");
+    }
+
+    private void NavigateToBudgets()
+    {
+        JSRuntime.InvokeVoidAsync("alert", "Navigate to /budgets/create - Feature coming soon!");
+    }
+
+    private void NavigateToGoals()
+    {
+        JSRuntime.InvokeVoidAsync("alert", "Navigate to /goals/create - Feature coming soon!");
     }
 
     private string GetTypeColor(TransactionType type)

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "fo7iGFj0g+M=",
+  "dgSpecHash": "YwmK5ppbKXo=",
   "success": true,
   "projectFilePath": "/workspaces/financeflow-pro/src/FinanceFlow.Client/FinanceFlow.Client.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,7 @@
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.authorization/9.0.6/microsoft.aspnetcore.authorization.9.0.6.nupkg.sha512",
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.components/8.0.16/microsoft.aspnetcore.components.8.0.16.nupkg.sha512",
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.components.analyzers/8.0.16/microsoft.aspnetcore.components.analyzers.8.0.16.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.aspnetcore.components.authorization/8.0.10/microsoft.aspnetcore.components.authorization.8.0.10.nupkg.sha512",
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.components.forms/8.0.16/microsoft.aspnetcore.components.forms.8.0.16.nupkg.sha512",
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.components.web/8.0.16/microsoft.aspnetcore.components.web.8.0.16.nupkg.sha512",
     "/home/codespace/.nuget/packages/microsoft.aspnetcore.components.webassembly/8.0.16/microsoft.aspnetcore.components.webassembly.8.0.16.nupkg.sha512",
