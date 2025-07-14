@@ -932,7 +932,7 @@ La arquitectura, decisiones de diseño y lógica de negocio fueron dirigidas por
 Si tienes preguntas o necesitas ayuda:
 - 🐛 Reportar bugs: [Issues](https://github.com/cavr46/financeflow-pro/issues)
 - 💡 Solicitar características: [Discussions](https://github.com/cavr46/financeflow-pro/discussions)
-- 📧 Contacto: [correo@ejemplo.com](mailto:correo@ejemplo.com)
+- 📧 Contacto: [correo@ejemplo.com](cavr46@gmail.com)
 
 ---
 
