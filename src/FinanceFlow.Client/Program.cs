@@ -18,4 +18,8 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthService>();
 
+// Add application services
+builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<ExportService>();
+
 await builder.Build().RunAsync();

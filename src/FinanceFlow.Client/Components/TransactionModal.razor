@@ -1,0 +1,474 @@
+@using FinanceFlow.Client.Models
+@using FinanceFlow.Client.Services
+@using System.ComponentModel.DataAnnotations
+
+<div class="modal fade @(IsVisible ? "show d-block" : "")" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-centered animate__animated @(IsVisible ? "animate__fadeInDown" : "")" role="document">
+        <div class="modal-content">
+            <div class="modal-header gradient-header">
+                <h5 class="modal-title text-white">
+                    <i class="fas @(IsEditMode ? "fa-edit" : "fa-plus-circle") me-2"></i>
+                    @(IsEditMode ? "Edit Transaction" : "New Transaction")
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="Cancel"></button>
+            </div>
+            
+            <EditForm Model="@transaction" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Transaction Type -->
+                        <div class="col-12">
+                            <div class="transaction-type-selector">
+                                <button type="button" class="type-btn @(transaction.Type == TransactionType.Income ? "active income" : "")" 
+                                        @onclick="@(() => transaction.Type = TransactionType.Income)">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>Income</span>
+                                </button>
+                                <button type="button" class="type-btn @(transaction.Type == TransactionType.Expense ? "active expense" : "")" 
+                                        @onclick="@(() => transaction.Type = TransactionType.Expense)">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span>Expense</span>
+                                </button>
+                                <button type="button" class="type-btn @(transaction.Type == TransactionType.Transfer ? "active transfer" : "")" 
+                                        @onclick="@(() => transaction.Type = TransactionType.Transfer)">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    <span>Transfer</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-dollar-sign me-1"></i>Amount
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <InputNumber @bind-Value="transaction.Amount" class="form-control" placeholder="0.00" />
+                            </div>
+                            <ValidationMessage For="@(() => transaction.Amount)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar me-1"></i>Date
+                            </label>
+                            <InputDate @bind-Value="transaction.Date" class="form-control form-control-lg" />
+                            <ValidationMessage For="@(() => transaction.Date)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-comment me-1"></i>Description
+                            </label>
+                            <InputText @bind-Value="transaction.Description" class="form-control form-control-lg" 
+                                     placeholder="What was this transaction for?" />
+                            <ValidationMessage For="@(() => transaction.Description)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Account -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-university me-1"></i>Account
+                            </label>
+                            <InputSelect @bind-Value="transaction.AccountId" class="form-select form-select-lg">
+                                <option value="0">Select Account...</option>
+                                @foreach (var account in accounts)
+                                {
+                                    <option value="@account.Id">@account.Name (@account.Balance.ToString("C"))</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => transaction.AccountId)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-tag me-1"></i>Category
+                            </label>
+                            <InputSelect @bind-Value="transaction.CategoryId" class="form-select form-select-lg">
+                                <option value="">Select Category...</option>
+                                @foreach (var category in GetFilteredCategories())
+                                {
+                                    <option value="@category.Id">
+                                        @category.Name
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-sticky-note me-1"></i>Notes (Optional)
+                            </label>
+                            <InputTextArea @bind-Value="transaction.Notes" class="form-control" rows="3" 
+                                         placeholder="Add any additional notes..." />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3 animate__animated animate__shakeX">
+                            <i class="fas fa-exclamation-circle me-2"></i>@errorMessage
+                        </div>
+                    }
+                }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel" disabled="@isSubmitting">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-check me-2"></i>
+                            <span>@(IsEditMode ? "Update" : "Create") Transaction</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsEditMode { get; set; }
+    [Parameter] public TransactionDto? EditTransaction { get; set; }
+    [Parameter] public EventCallback<TransactionDto> OnTransactionSaved { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    
+    [Inject] private TransactionService TransactionService { get; set; } = null!;
+    
+    private CreateTransactionDto transaction = new();
+    private List<CategoryDto> categories = new();
+    private List<AccountDto> accounts = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private bool isLoadingData = false;
+    private Dictionary<string, string> validationErrors = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !IsEditMode)
+        {
+            transaction = new CreateTransactionDto
+            {
+                Type = TransactionType.Expense,
+                Date = DateTime.Now
+            };
+        }
+        else if (IsVisible && IsEditMode && EditTransaction != null)
+        {
+            transaction = new CreateTransactionDto
+            {
+                Description = EditTransaction.Description,
+                Amount = EditTransaction.Amount,
+                Type = EditTransaction.Type,
+                Date = EditTransaction.Date,
+                AccountId = EditTransaction.AccountId,
+                CategoryId = EditTransaction.CategoryId,
+                Notes = EditTransaction.Notes
+            };
+        }
+        
+        if (IsVisible)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        isLoadingData = true;
+        validationErrors.Clear();
+        errorMessage = null;
+        
+        try
+        {
+            var loadTasks = new List<Task>
+            {
+                LoadCategories(),
+                LoadAccounts()
+            };
+            await Task.WhenAll(loadTasks);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = "Network error. Please check your connection and try again.";
+            Console.WriteLine($"Network error loading data: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load data. Please try again.";
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingData = false;
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        categories = await TransactionService.GetCategoriesAsync();
+    }
+
+    private async Task LoadAccounts()
+    {
+        accounts = await TransactionService.GetAccountsAsync();
+    }
+
+    private List<CategoryDto> GetFilteredCategories()
+    {
+        return transaction.Type switch
+        {
+            TransactionType.Income => categories.Where(c => c.Type == CategoryType.Income || c.Type == CategoryType.Both).ToList(),
+            TransactionType.Expense => categories.Where(c => c.Type == CategoryType.Expense || c.Type == CategoryType.Both).ToList(),
+            _ => categories
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!ValidateTransaction())
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+        validationErrors.Clear();
+
+        try
+        {
+            TransactionDto result;
+            
+            if (IsEditMode && EditTransaction != null)
+            {
+                var updateDto = new UpdateTransactionDto
+                {
+                    Description = transaction.Description,
+                    Amount = transaction.Amount,
+                    Type = transaction.Type,
+                    Date = transaction.Date,
+                    AccountId = transaction.AccountId,
+                    CategoryId = transaction.CategoryId,
+                    Notes = transaction.Notes
+                };
+                result = await TransactionService.UpdateTransactionAsync(EditTransaction.Id, updateDto);
+            }
+            else
+            {
+                result = await TransactionService.CreateTransactionAsync(transaction);
+            }
+            
+            await OnTransactionSaved.InvokeAsync(result);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = "Network error. Please check your connection and try again.";
+            Console.WriteLine($"Network error saving transaction: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            var message = ex.Message.ToLower();
+            if (message.Contains("validation") || message.Contains("invalid"))
+            {
+                errorMessage = "Please check your input data and try again.";
+            }
+            else if (message.Contains("insufficient"))
+            {
+                errorMessage = "Insufficient account balance for this transaction.";
+            }
+            else if (message.Contains("duplicate"))
+            {
+                errorMessage = "A similar transaction already exists.";
+            }
+            else
+            {
+                errorMessage = "Failed to save transaction. Please try again.";
+            }
+            Console.WriteLine($"Error saving transaction: {ex}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task Cancel()
+    {
+        transaction = new CreateTransactionDto();
+        errorMessage = null;
+        validationErrors.Clear();
+        await OnCancel.InvokeAsync();
+    }
+
+    private bool ValidateTransaction()
+    {
+        validationErrors.Clear();
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(transaction.Description))
+        {
+            validationErrors["Description"] = "Description is required.";
+            isValid = false;
+        }
+        else if (transaction.Description.Length > 200)
+        {
+            validationErrors["Description"] = "Description must be less than 200 characters.";
+            isValid = false;
+        }
+
+        if (transaction.Amount <= 0)
+        {
+            validationErrors["Amount"] = "Amount must be greater than zero.";
+            isValid = false;
+        }
+        else if (transaction.Amount > 999999.99m)
+        {
+            validationErrors["Amount"] = "Amount cannot exceed $999,999.99.";
+            isValid = false;
+        }
+
+        if (transaction.Date > DateTime.Now.AddDays(1))
+        {
+            validationErrors["Date"] = "Date cannot be in the future.";
+            isValid = false;
+        }
+        else if (transaction.Date < DateTime.Now.AddYears(-10))
+        {
+            validationErrors["Date"] = "Date cannot be more than 10 years ago.";
+            isValid = false;
+        }
+
+        if (transaction.AccountId <= 0)
+        {
+            validationErrors["AccountId"] = "Please select an account.";
+            isValid = false;
+        }
+
+        if (!string.IsNullOrEmpty(transaction.Notes) && transaction.Notes.Length > 500)
+        {
+            validationErrors["Notes"] = "Notes must be less than 500 characters.";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+}
+
+<style>
+    .gradient-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .transaction-type-selector {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .type-btn {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .type-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .type-btn i {
+        font-size: 1.5rem;
+    }
+
+    .type-btn.active {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .type-btn.active.income {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        border-color: #22c55e;
+    }
+
+    .type-btn.active.expense {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        border-color: #ef4444;
+    }
+
+    .type-btn.active.transfer {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        border-color: #06b6d4;
+    }
+
+    .form-label {
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .modal-footer {
+        background-color: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        padding: 1.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #68519e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .input-group-text {
+        background-color: #f3f4f6;
+        border-color: #e5e7eb;
+        font-weight: 600;
+    }
+</style>

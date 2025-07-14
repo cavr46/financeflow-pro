@@ -1,239 +1,917 @@
 @page "/transactions"
 @using Microsoft.AspNetCore.Authorization
 @using FinanceFlow.Client.Models
+@using FinanceFlow.Client.Services
+@using FinanceFlow.Client.Components
 @attribute [Authorize]
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject TransactionService TransactionService
+@inject ExportService ExportService
 
 <PageTitle>Transactions - FinanceFlow Pro</PageTitle>
 
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="display-4">Transactions</h1>
-            <p class="lead">Manage your income, expenses, and transfers</p>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary btn-lg" @onclick="@(() => ShowAddTransactionModal())">
-                <i class="fas fa-plus me-2"></i>Add Transaction
-            </button>
+<div class="transactions-container">
+    <!-- Animated Header -->
+    <div class="transactions-header animate__animated animate__fadeInDown">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="display-4 fw-bold text-white mb-0">Transactions</h1>
+                <p class="lead text-white-50 mb-0">Track every penny that moves through your accounts</p>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-light btn-lg shadow-sm pulse-animation" @onclick="ShowAddTransactionModal">
+                        <i class="fas fa-plus-circle me-2"></i>Add Transaction
+                    </button>
+                    <button class="btn btn-outline-light btn-lg shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @onclick="ExportToCsv"><i class="fas fa-file-csv me-2"></i>Export to CSV</a></li>
+                        <li><a class="dropdown-item" href="#" @onclick="ExportToJson"><i class="fas fa-file-code me-2"></i>Export to JSON</a></li>
+                        <li><a class="dropdown-item" href="#" @onclick="ExportToPdf"><i class="fas fa-file-pdf me-2"></i>Export to PDF</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+        <!-- Skeleton Loading State -->
+        <div class="row mb-4">
+            @for (int i = 0; i < 4; i++)
+            {
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <SkeletonLoader Type="stat-card" />
+                </div>
+            }
+        </div>
+        
+        <SkeletonLoader Type="filter-card" />
+        
+        <div class="transactions-card mt-4">
+            <div class="table-responsive">
+                <table class="table table-hover transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Account</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < 8; i++)
+                        {
+                            <SkeletonLoader Type="table-row" />
+                        }
+                    </tbody>
+                </table>
             </div>
-            <p class="mt-3">Loading transactions...</p>
         </div>
     }
     else
     {
-        <!-- Quick Stats -->
+        <!-- Enhanced Stats Cards -->
         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title text-success">Income</h5>
-                        <h3 class="text-success">$2,450.00</h3>
-                        <small class="text-muted">This Month</small>
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                <div class="stat-card income-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Income</p>
+                        <h3 class="stat-value">@monthlyStats.TotalIncome.ToString("C")</h3>
+                        <small class="stat-period">This Month</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger">Expenses</h5>
-                        <h3 class="text-danger">$1,875.50</h3>
-                        <small class="text-muted">This Month</small>
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                <div class="stat-card expense-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Expenses</p>
+                        <h3 class="stat-value">@monthlyStats.TotalExpenses.ToString("C")</h3>
+                        <small class="stat-period">This Month</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title text-info">Net</h5>
-                        <h3 class="text-info">$574.50</h3>
-                        <small class="text-muted">This Month</small>
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                <div class="stat-card balance-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Net Balance</p>
+                        <h3 class="stat-value @(monthlyStats.NetAmount >= 0 ? "text-success" : "text-danger")">
+                            @monthlyStats.NetAmount.ToString("C")
+                        </h3>
+                        <small class="stat-period">This Month</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">Total</h5>
-                        <h3>45</h3>
-                        <small class="text-muted">Transactions</small>
+            <div class="col-lg-3 col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
+                <div class="stat-card count-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-receipt"></i>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label">Date Range</label>
-                        <select class="form-select">
-                            <option selected>This Month</option>
-                            <option>Last Month</option>
-                            <option>Last 3 Months</option>
-                            <option>This Year</option>
-                            <option>Custom Range</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Type</label>
-                        <select class="form-select">
-                            <option selected>All Types</option>
-                            <option>Income</option>
-                            <option>Expense</option>
-                            <option>Transfer</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select">
-                            <option selected>All Categories</option>
-                            <option>Food & Dining</option>
-                            <option>Transportation</option>
-                            <option>Shopping</option>
-                            <option>Entertainment</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Search</label>
-                        <input type="text" class="form-control" placeholder="Search transactions...">
+                    <div class="stat-content">
+                        <p class="stat-label">Total</p>
+                        <h3 class="stat-value">@transactionResponse.TotalCount</h3>
+                        <small class="stat-period">Transactions</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Transactions List -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Recent Transactions</h5>
+        <!-- Enhanced Filters -->
+        <div class="filter-card mb-4 animate__animated animate__fadeIn">
+            <div class="filter-header">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Transactions</h5>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ResetFilters">
+                    <i class="fas fa-undo me-1"></i>Reset
+                </button>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Account</th>
-                                <th>Amount</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Sample transactions -->
-                            <tr>
-                                <td>Dec 15, 2024</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-utensils text-primary me-2"></i>
-                                        Lunch at Restaurant
-                                    </div>
-                                </td>
-                                <td><span class="badge bg-warning">Food & Dining</span></td>
-                                <td>Credit Card</td>
-                                <td><span class="text-danger">-$45.50</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Dec 14, 2024</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-dollar-sign text-success me-2"></i>
-                                        Salary Payment
-                                    </div>
-                                </td>
-                                <td><span class="badge bg-success">Salary</span></td>
-                                <td>Checking Account</td>
-                                <td><span class="text-success">+$2,500.00</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Dec 13, 2024</td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-gas-pump text-info me-2"></i>
-                                        Gas Station
-                                    </div>
-                                </td>
-                                <td><span class="badge bg-info">Transportation</span></td>
-                                <td>Debit Card</td>
-                                <td><span class="text-danger">-$65.00</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
-                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="filter-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Date Range</label>
+                        <select class="form-select" @bind="selectedDateRange" @bind:event="onchange" @onchange="OnDateRangeChanged">
+                            <option value="thisMonth">This Month</option>
+                            <option value="lastMonth">Last Month</option>
+                            <option value="last3Months">Last 3 Months</option>
+                            <option value="thisYear">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Type</label>
+                        <select class="form-select" @bind="filter.Type" @bind:event="onchange" @onchange="ApplyFilters">
+                            <option value="">All Types</option>
+                            <option value="@TransactionType.Income">Income</option>
+                            <option value="@TransactionType.Expense">Expense</option>
+                            <option value="@TransactionType.Transfer">Transfer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Category</label>
+                        <select class="form-select" @bind="filter.CategoryId" @bind:event="onchange" @onchange="ApplyFilters">
+                            <option value="">All Categories</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Search</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search transactions..." 
+                                   @bind="filter.SearchTerm" @bind:event="oninput" @oninput="OnSearchInput" @onkeyup="@(async (e) => { if (e.Key == "Enter") await ApplyFilters(); })">
+                            <button class="btn btn-primary" type="button" @onclick="ApplyFilters">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pagination -->
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-            </ul>
-        </nav>
+        <!-- Transactions Table with Modern Design -->
+        <div class="transactions-card animate__animated animate__fadeInUp">
+            <div class="table-responsive">
+                <table class="table table-hover transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Account</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (transactionResponse.Transactions.Any())
+                        {
+                            @foreach (var transaction in transactionResponse.Transactions)
+                            {
+                                <tr class="transaction-row">
+                                    <td>
+                                        <div class="date-cell">
+                                            <span class="date-day">@transaction.Date.Day</span>
+                                            <span class="date-month">@transaction.Date.ToString("MMM")</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="description-cell">
+                                            <span class="fw-semibold">@transaction.Description</span>
+                                            @if (!string.IsNullOrEmpty(transaction.Notes))
+                                            {
+                                                <small class="text-muted d-block">@transaction.Notes</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(transaction.CategoryName))
+                                        {
+                                            <span class="category-badge" style="background-color: @(transaction.CategoryColor ?? "#6b7280")20; color: @(transaction.CategoryColor ?? "#6b7280")">
+                                                <i class="@(transaction.CategoryIcon ?? "fas fa-tag") me-1"></i>
+                                                @transaction.CategoryName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Uncategorized</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="account-cell">
+                                            <i class="fas fa-university me-1 text-muted"></i>
+                                            @transaction.AccountName
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount @GetAmountClass(transaction.Type)">
+                                            @GetAmountPrefix(transaction.Type)@transaction.Amount.ToString("C")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="@(() => EditTransaction(transaction))" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="@(() => DeleteTransaction(transaction))" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted mb-0">No transactions found</p>
+                                        <small class="text-muted">Try adjusting your filters or add a new transaction</small>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modern Pagination -->
+        @if (transactionResponse.TotalPages > 1)
+        {
+            <nav class="mt-4 animate__animated animate__fadeIn">
+                <ul class="pagination pagination-modern justify-content-center">
+                    <li class="page-item @(filter.Page == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="@(() => ChangePage(filter.Page - 1))" disabled="@(filter.Page == 1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </li>
+                    
+                    @for (int i = Math.Max(1, filter.Page - 2); i <= Math.Min(transactionResponse.TotalPages, filter.Page + 2); i++)
+                    {
+                        var pageNum = i;
+                        <li class="page-item @(pageNum == filter.Page ? "active" : "")">
+                            <button class="page-link" @onclick="@(() => ChangePage(pageNum))">@pageNum</button>
+                        </li>
+                    }
+                    
+                    <li class="page-item @(filter.Page == transactionResponse.TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="@(() => ChangePage(filter.Page + 1))" 
+                                disabled="@(filter.Page == transactionResponse.TotalPages)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 </div>
 
+<!-- Transaction Modal -->
+<TransactionModal IsVisible="@showModal" 
+                  IsEditMode="@isEditMode" 
+                  EditTransaction="@selectedTransaction"
+                  OnTransactionSaved="OnTransactionSaved"
+                  OnCancel="CloseModal" />
+
 @code {
-    private bool isLoading = false;
+    private TransactionListResponse transactionResponse = new();
+    private TransactionFilterRequest filter = new();
+    private TransactionStatsDto monthlyStats = new();
+    private List<CategoryDto> categories = new();
+    private bool isLoading = true;
+    private bool showModal = false;
+    private bool isEditMode = false;
+    private TransactionDto? selectedTransaction;
+    private string selectedDateRange = "thisMonth";
+    private Timer? searchTimer;
+    private string? lastSearchTerm;
+    private bool isExporting = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate loading
+        SetDefaultDateRange();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         isLoading = true;
-        await Task.Delay(1000);
-        isLoading = false;
+        try
+        {
+            var tasks = new List<Task>
+            {
+                LoadTransactions(),
+                LoadMonthlyStats(),
+                LoadCategories()
+            };
+            await Task.WhenAll(tasks);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Network error loading data: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Network error. Please check your connection.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Failed to load data. Please refresh the page.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadTransactions()
+    {
+        transactionResponse = await TransactionService.GetTransactionsAsync(filter);
+    }
+
+    private async Task LoadMonthlyStats()
+    {
+        monthlyStats = await TransactionService.GetMonthlyStatsAsync();
+    }
+
+    private async Task LoadCategories()
+    {
+        categories = await TransactionService.GetCategoriesAsync();
+    }
+
+    private void SetDefaultDateRange()
+    {
+        var now = DateTime.Now;
+        filter.StartDate = new DateTime(now.Year, now.Month, 1);
+        filter.EndDate = filter.StartDate.Value.AddMonths(1).AddDays(-1);
+    }
+
+    private async Task OnDateRangeChanged(ChangeEventArgs e)
+    {
+        var now = DateTime.Now;
+        switch (selectedDateRange)
+        {
+            case "thisMonth":
+                filter.StartDate = new DateTime(now.Year, now.Month, 1);
+                filter.EndDate = filter.StartDate.Value.AddMonths(1).AddDays(-1);
+                break;
+            case "lastMonth":
+                var lastMonth = now.AddMonths(-1);
+                filter.StartDate = new DateTime(lastMonth.Year, lastMonth.Month, 1);
+                filter.EndDate = filter.StartDate.Value.AddMonths(1).AddDays(-1);
+                break;
+            case "last3Months":
+                filter.StartDate = now.AddMonths(-3);
+                filter.EndDate = now;
+                break;
+            case "thisYear":
+                filter.StartDate = new DateTime(now.Year, 1, 1);
+                filter.EndDate = new DateTime(now.Year, 12, 31);
+                break;
+        }
+        await ApplyFilters();
+    }
+
+    private async Task ApplyFilters()
+    {
+        filter.Page = 1;
+        await LoadTransactions();
+    }
+
+    private async Task ResetFilters()
+    {
+        filter = new TransactionFilterRequest();
+        selectedDateRange = "thisMonth";
+        SetDefaultDateRange();
+        await LoadData();
+    }
+
+    private async Task ChangePage(int page)
+    {
+        filter.Page = page;
+        await LoadTransactions();
     }
 
     private void ShowAddTransactionModal()
     {
-        JSRuntime.InvokeVoidAsync("alert", "Add Transaction modal - Feature coming soon!");
+        isEditMode = false;
+        selectedTransaction = null;
+        showModal = true;
+    }
+
+    private void EditTransaction(TransactionDto transaction)
+    {
+        isEditMode = true;
+        selectedTransaction = transaction;
+        showModal = true;
+    }
+
+    private async Task DeleteTransaction(TransactionDto transaction)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to delete this transaction for {transaction.Amount:C}?");
+        
+        if (confirmed)
+        {
+            // Optimistic update - remove from UI immediately
+            var originalTransactions = transactionResponse.Transactions.ToList();
+            transactionResponse.Transactions.Remove(transaction);
+            transactionResponse.TotalCount--;
+            StateHasChanged();
+            
+            try
+            {
+                await TransactionService.DeleteTransactionAsync(transaction.Id);
+                await LoadMonthlyStats(); // Refresh stats
+            }
+            catch (Exception ex)
+            {
+                // Revert optimistic update on error
+                transactionResponse.Transactions = originalTransactions;
+                transactionResponse.TotalCount++;
+                StateHasChanged();
+                
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to delete transaction: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task OnTransactionSaved(TransactionDto transaction)
+    {
+        CloseModal();
+        
+        // Optimistic update for better UX
+        if (isEditMode)
+        {
+            // Update existing transaction in the list
+            var existingIndex = transactionResponse.Transactions.FindIndex(t => t.Id == transaction.Id);
+            if (existingIndex >= 0)
+            {
+                transactionResponse.Transactions[existingIndex] = transaction;
+            }
+        }
+        else
+        {
+            // Add new transaction to the beginning of the list
+            transactionResponse.Transactions.Insert(0, transaction);
+            transactionResponse.TotalCount++;
+        }
+        
+        StateHasChanged();
+        
+        // Refresh stats and reload if needed
+        await LoadMonthlyStats();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        isEditMode = false;
+        selectedTransaction = null;
+    }
+
+    private string GetAmountClass(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.Income => "amount-income",
+            TransactionType.Expense => "amount-expense",
+            TransactionType.Transfer => "amount-transfer",
+            _ => ""
+        };
+    }
+
+    private string GetAmountPrefix(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.Income => "+",
+            TransactionType.Expense => "-",
+            _ => ""
+        };
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value?.ToString();
+        
+        // Cancel previous timer
+        searchTimer?.Dispose();
+        
+        // If search term is empty, search immediately
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filter.SearchTerm = null;
+            _ = ApplyFilters();
+            return;
+        }
+        
+        // Debounce search for 500ms
+        searchTimer = new Timer(async _ => 
+        {
+            await InvokeAsync(async () => 
+            {
+                if (filter.SearchTerm == lastSearchTerm) return;
+                
+                lastSearchTerm = filter.SearchTerm;
+                await ApplyFilters();
+            });
+        }, null, 500, Timeout.Infinite);
+    }
+
+    public void Dispose()
+    {
+        searchTimer?.Dispose();
+    }
+
+    private async Task ExportToCsv()
+    {
+        if (isExporting) return;
+        
+        isExporting = true;
+        try
+        {
+            var allTransactions = await GetAllTransactionsForExport();
+            var filename = $"transactions_{DateTime.Now:yyyy-MM-dd}.csv";
+            await ExportService.ExportTransactionsToCsv(allTransactions, filename);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to export: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private async Task ExportToJson()
+    {
+        if (isExporting) return;
+        
+        isExporting = true;
+        try
+        {
+            var allTransactions = await GetAllTransactionsForExport();
+            var filename = $"transactions_{DateTime.Now:yyyy-MM-dd}.json";
+            await ExportService.ExportTransactionsToJson(allTransactions, filename);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to export: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private async Task ExportToPdf()
+    {
+        if (isExporting) return;
+        
+        isExporting = true;
+        try
+        {
+            var allTransactions = await GetAllTransactionsForExport();
+            var filename = $"transactions_{DateTime.Now:yyyy-MM-dd}.pdf";
+            await ExportService.ExportTransactionsPdf(allTransactions, monthlyStats, filename);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to export: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private async Task<List<TransactionDto>> GetAllTransactionsForExport()
+    {
+        var exportFilter = new TransactionFilterRequest
+        {
+            StartDate = filter.StartDate,
+            EndDate = filter.EndDate,
+            Type = filter.Type,
+            CategoryId = filter.CategoryId,
+            AccountId = filter.AccountId,
+            SearchTerm = filter.SearchTerm,
+            MinAmount = filter.MinAmount,
+            MaxAmount = filter.MaxAmount,
+            Page = 1,
+            PageSize = 10000 // Get all transactions
+        };
+        
+        var result = await TransactionService.GetTransactionsAsync(exportFilter);
+        return result.Transactions;
     }
 }
 
 <style>
-    .card {
-        border: none;
+    .transactions-container {
+        padding: 2rem 0;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    .transactions-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 1.5rem;
+        margin: -2rem -12px 2rem -12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Enhanced Stat Cards */
+    .stat-card {
+        background: white;
         border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+        height: 100%;
     }
 
-    .table th {
-        border-top: none;
-        font-weight: 600;
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     }
 
-    .badge {
-        font-size: 0.75rem;
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
     }
 
-    .btn-sm {
-        padding: 0.25rem 0.75rem;
+    .income-card .stat-icon {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .expense-card .stat-icon {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .balance-card .stat-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .count-card .stat-icon {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
         font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+        color: #111827;
+    }
+
+    .stat-period {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .filter-header {
+        background-color: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filter-body {
+        padding: 1.5rem;
+    }
+
+    /* Transactions Table */
+    .transactions-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .transactions-table {
+        margin: 0;
+    }
+
+    .transactions-table thead {
+        background-color: #f9fafb;
+    }
+
+    .transactions-table th {
+        font-weight: 600;
+        color: #4b5563;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+
+    .transaction-row {
+        transition: all 0.2s ease;
+    }
+
+    .transaction-row:hover {
+        background-color: #f9fafb;
+    }
+
+    .date-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #f3f4f6;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        width: 50px;
+    }
+
+    .date-day {
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .date-month {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    .description-cell {
+        max-width: 300px;
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .account-cell {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .amount {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .amount-income {
+        color: #22c55e;
+    }
+
+    .amount-expense {
+        color: #ef4444;
+    }
+
+    .amount-transfer {
+        color: #06b6d4;
+    }
+
+    /* Modern Pagination */
+    .pagination-modern .page-link {
+        border: none;
+        margin: 0 0.25rem;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: #4b5563;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .pagination-modern .page-link:hover {
+        background: #f3f4f6;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .pagination-modern .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .pagination-modern .page-item.disabled .page-link {
+        background: #f9fafb;
+        color: #d1d5db;
+        cursor: not-allowed;
+    }
+
+    /* Loading State */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .transactions-header {
+            margin: -2rem -15px 2rem -15px;
+            border-radius: 0;
+        }
+
+        .stat-card {
+            margin-bottom: 1rem;
+        }
+
+        .date-cell {
+            width: auto;
+            flex-direction: row;
+            gap: 0.5rem;
+        }
+
+        .transactions-table {
+            font-size: 0.875rem;
+        }
     }
 </style>
